@@ -1,14 +1,14 @@
 # Luxury Real Estate Marketplace (Nepal)  
-## MASTER ARCHITECTURE • DR • COST • AWS RATIONALE • Q&A DOSSIER
+## MASTER ARCHITECTURE • DR • COST • AWS RATIONALE • FULL Q&A DOSSIER
 
-Version: 1.3 (Final Consolidated)  
-Authoring Context: Consolidation of all prior responses (architecture blueprint, DR, cost model, AWS vs other clouds, diagram appraisal, extensive Q&A).  
-Audience: Founders, Investors, Product Leadership, Light Dev/Ops, Security & Compliance Reviewers.
+Version: 1.4 (Final – Full Q&A Expanded)  
+Authoring Context: Consolidation of all prior responses (architecture blueprint, DR, cost model, AWS vs other clouds, diagram appraisal, COMPLETE detailed Q&A).  
+Audience: Founders, Investors, Product Leadership, Engineering (light), Security & Compliance Reviewers.
 
 ---
 
 ## 0. Executive Summary (One-Line)
-A secure, event-driven, fully serverless, DR‑ready architecture on AWS enabling a premium luxury real estate marketplace with elastic cost, minimal operational overhead, and a phased path toward advanced search, analytics, and AI valuation.
+A secure, event-driven, fully serverless, DR‑ready architecture on AWS enabling a premium luxury real estate marketplace with elastic cost, minimal operational overhead, and a phased path toward advanced search, analytics, and AI valuation—while preserving flexibility via open data formats and decoupled events.
 
 ---
 
@@ -26,8 +26,8 @@ A secure, event-driven, fully serverless, DR‑ready architecture on AWS enablin
 11. On-Prem / Traditional vs Serverless Comparison  
 12. Recommendations & Best Practices (Prioritized)  
 13. Implementation Milestones (16-Week Plan)  
-14. Extended Comprehensive Technical Q&A Catalogue  
-15. DR Runbook Summary (Condensed)  
+14. Extended Comprehensive Technical Q&A Catalogue (Full)  
+15. DR Runbook Summary (Condensed Table)  
 16. Immediate Action Items  
 17. Optional Future Enhancements  
 18. Why AWS vs Other Clouds (Comparative Rationale)  
@@ -39,26 +39,26 @@ A secure, event-driven, fully serverless, DR‑ready architecture on AWS enablin
 ---
 
 ## 2. Company & Product Overview (Corrected)
-A luxury real estate development & brokerage entity operating in Kathmandu’s premium neighborhoods (Budhanilkantha, Bhaisepati, Sanepa, Dhumbarahi, Bansbari, Maharajgunj). Historically reliant on private investments, off‑market relationships, brokers—multi‑billion NPR turnover. Transition objective: institutionalize as a “Luxury Realtor Services” digital marketplace highlighting exclusive and high-value listings with rich immersive media (drone, 360° tours), establishing a premium brand presence and direct digital channel.
+A luxury real estate development & brokerage entity operating in Kathmandu’s premium neighborhoods (Budhanilkantha, Bhaisepati, Sanepa, Dhumbarahi, Bansbari, Maharajgunj). Historically reliant on private investments, off‑market relationships, brokers—multi‑billion NPR turnover. Strategic transition: institutionalize as a “Luxury Realtor Services” digital marketplace showcasing exclusive listings, immersive media (drone, 360° tours), and premium brand positioning—moving from manual brokerage to data-driven platform.
 
 ---
 
 ## 3. Business Objectives & Non-Functional Priorities
 ### Business Objectives
-- Own platform for premium property listing, marketing and engagement analytics.
-- Provide differentiated premium experiences (exclusive/off-market access).
+- Own platform for premium property listing & marketing.
+- Deliver exclusive/premium content and early access tiers.
 - Support multi-role ecosystem (buyers, sellers/developers, brokers, admins, investors).
-- Enable monetization via premium subscriptions and early-access tiers.
-- Facilitate data-driven decision-making (pricing, demand insights).
-- Launch fast with minimal ongoing infrastructure staffing.
+- Enable data-driven insights (engagement, pricing, conversion).
+- Introduce monetization via subscriptions & premium visibility.
+- Launch rapidly with minimal infrastructure staffing obligations.
 
 ### Ranked Non-Functional Priorities
 1. Security & Data Integrity  
-2. Availability & Performance (low latency for Nepal; region: ap-south-1)  
-3. Elastic Cost (pay-per-use)  
+2. Availability & Performance (low latency in Nepal; region: ap-south-1)  
+3. Elastic Cost (usage-based)  
 4. Observability & Cost Transparency  
-5. Extensibility (event-driven foundation)  
-6. Maintainability with minimal full-time ops staff  
+5. Extensibility (event-driven modular design)  
+6. Maintainability (small ops overhead)  
 
 ---
 
@@ -67,210 +67,215 @@ A luxury real estate development & brokerage entity operating in Kathmandu’s p
 ### Edge / Presentation
 Component | Detail
 ----------|-------
-S3 (Static & Media) | Versioning enabled, SSE (SSE-S3 or SSE-KMS), Object Ownership enforced, Block Public Access.
-CloudFront | OAC for S3 access; behaviors for /static, /media, /api; Signed URLs/Cookies for premium media; HTTP/3, Brotli, security headers (CSP, HSTS); optional CloudFront Functions.
-Optional Edge Logic | CloudFront Functions (light), Lambda@Edge (only if heavy transformation needed).
+S3 (Static & Media) | Versioning, SSE (SSE-S3 or SSE-KMS), Object Ownership enforced, Block Public Access.
+CloudFront | Origin Access Control (OAC), behaviors for /static, /media, /api, Signed URLs/Cookies for premium media, HTTP/3 & Brotli, strict security headers (CSP, HSTS, X-Content-Type-Options).
+CloudFront Functions | Lightweight personalization/header rewrites.
+Lambda@Edge (optional) | Only if heavier edge logic (e.g., advanced auth transforms) is necessary.
 
 ### Application / API Layer
-- API Gateway (HTTP API) for low-cost, JWT-native routing & throttling.
-- AWS Lambda (Node.js for main CRUD, Python for data/ML tasks) using Powertools for tracing/logging/metrics.
-- Step Functions for orchestrated multi-step flows (media ingestion, moderation, enrichment).
-- EventBridge as central domain event bus (PropertyCreated, ListingApproved, MediaProcessed).
-- SQS (buffer/retry decoupling), SNS (notification fan-out).
-- AppConfig / Parameter Store for dynamic configuration toggles & features.
-- Secrets Manager for credentials & rotation.
+- API Gateway (HTTP API) for low-cost routing & JWT validation.
+- AWS Lambda (Node.js + Python) with Powertools for logging, tracing, metrics.
+- Step Functions for orchestrated multi-step workflows (media ingestion, moderation, geospatial enrichment).
+- EventBridge for domain events & decoupling (future microservices).
+- SQS for buffering/retries; SNS for notifications.
+- AppConfig / Parameter Store for feature flags & environment configuration.
+- Secrets Manager for credential rotation and sensitive values.
 
 ### Identity & Access
-- Cognito User Pools: buyers, brokers, sellers, admins (groups & custom claims).
-- Conditional MFA (brokers/admin) via group configuration or triggers.
-- Cognito Identity Pool: unauthenticated guest access (scoped IAM).
-- API Gateway JWT Authorizer + domain authorization enforced in function code.
+- Cognito User Pools: Roles (buyer, broker, seller, admin) + conditional MFA (brokers/admin).
+- Cognito Identity Pool: Guest browsing with scoped IAM read privileges.
+- API Gateway JWT Authorizer; fine-grained domain authorization in Lambda (claims: role, subscriptionLevel, brokerId).
 
 ### Data & Storage
-- DynamoDB single-table (On-Demand → optional Provisioned + Auto Scaling later). PITR enabled.
-- (Optional) Aurora Serverless v2 for relational/financial/reporting use cases when required.
-- S3 buckets segregated: raw-uploads, public-media, premium-media (Versioning, SRR, optional CRR).
-- Optional OpenSearch (Phase 2) for advanced full-text/geo/faceted search.
-- Amazon Location Service for geocoding / maps.
-- S3 Data Lake zone (DynamoDB exports → Parquet) for Athena/Glue analytics.
+- DynamoDB single-table (On-Demand, PITR).
+- (Optional later) Aurora Serverless v2 for relational financial/reporting.
+- S3 buckets: raw-uploads, public-media, premium-media (Versioning + SRR; optional CRR).
+- (Phase 2) OpenSearch for complex full-text & geo querying.
+- Location Service for geocoding & mapping.
+- S3 Data Lake zone (DynamoDB export → Parquet) for Athena/Glue analytics.
 
-### Media Processing Pipeline
-1. Client pre-signed upload → raw-uploads bucket.
-2. S3 event → EventBridge / Step Functions pipeline.
-3. Steps: validation → virus scan (optional) → image resizing (Sharp in Lambda) → video transcoding (MediaConvert) → metadata enrichment.
-4. Outputs to public-media or premium-media; DynamoDB item updated; MediaProcessed event emitted.
+### Media Processing
+1. Pre-signed upload → raw-uploads bucket.  
+2. S3 event → EventBridge → Step Functions pipeline.  
+3. Steps: Validate → Virus Scan (optional) → Resize (Lambda Sharp) → Encode (MediaConvert) → Metadata update (DynamoDB).  
+4. Output stored (public/premium); MediaProcessed event broadcast.
 
 ### Security & Governance
-- WAF (managed rule sets: Common, SQLi/XSS, IP reputation, Bot Control optional).
-- Shield Standard (Advanced if volumetric DDoS risk).
-- Strict least-privilege IAM (one role per Lambda function).
-- KMS CMKs: separate keys (app data, media, logs).
-- GuardDuty, Security Hub (CIS), AWS Config for compliance guardrails.
-- CloudTrail (org-level + selective Data Events for cost control).
-- Secrets Manager & Parameter Store separation of secrets vs config.
+- WAF (managed rule sets: Common, SQLi/XSS, IP reputation, optional Bot Control).
+- Shield Standard (Advanced if high DDoS risk emerges).
+- IAM: least privilege per function; automated policy linting.
+- KMS CMKs segmented (data, media, logs).
+- GuardDuty, Security Hub (CIS), AWS Config (drift & compliance), CloudTrail (select Data Events).
+- Secrets Manager & Parameter Store separation.
 
 ### Observability
-- CloudWatch Logs (structured JSON), Metrics, Alarms with SLO thresholds.
-- AWS X-Ray for tracing flows (API Gateway → Lambda → DynamoDB).
-- Synthetics (login, property search, premium media retrieval).
-- RUM (optional) for frontend performance & UX metrics.
-- Budgets & Cost Anomaly Detection; Tag taxonomy (Environment, Owner, CostCenter, DataSensitivity).
+- CloudWatch Logs (JSON), Metrics, Alarms (SLO thresholds).
+- X-Ray for end-to-end tracing.
+- CloudWatch Synthetics (login, search, premium media paths).
+- RUM (optional) – Core Web Vitals.
+- Budgets + Cost Anomaly Detection; Tag taxonomy (Environment, Owner, CostCenter, DataSensitivity).
 
 ### CI/CD & IaC
-- CDK or Terraform (decision early).  
-- Pipeline (CodePipeline / GitHub Actions) -> build -> tests -> deploy.  
-- Multi-account: Sandbox, Dev, Staging, Prod via Organizations & SCPs.  
-- Ephemeral PR stacks for integration tests.
+- CDK or Terraform (final decision early).
+- Pipeline (CodePipeline / GitHub Actions) → Build → Test (unit + integration) → Deploy.
+- Multi-account org: Sandbox/Dev/Staging/Prod.
+- Ephemeral PR stacks for integration tests (auto-destroy).
 
 ### Extensibility
-- Event-driven design simplifies future microservices or container transition.
-- Future additions: OpenSearch, ML inference, AppSync GraphQL overlay, AI valuations, personalization.
+- Event-driven enabling future microservices (billing, analytics, ML).
+- AI/ML inference endpoints (valuation, recommendations).
+- GraphQL/AppSync overlay if client query complexity increases.
 
 ---
 
 ## 5. Data Model (Illustrative DynamoDB Single-Table)
 
-PK | SK | EntityType | Key Attributes (Sample)
----|----|------------|------------------------
+PK | SK | EntityType | Attributes (Sample)
+---|----|------------|--------------------
 USER#<UserId> | PROFILE | User | name, email, role, subscriptionLevel, createdAt
 USER#<UserId> | FAVORITE#<PropertyId> | Favorite | createdAt
 PROPERTY#<PropertyId> | METADATA | Property | price, status, brokerId, locationHash, premiumFlag, createdAt
 PROPERTY#<PropertyId> | MEDIA#<MediaId> | Media | mediaType, s3Key, processingState
-BROKER#<BrokerId> | PROFILE | Broker | licenseNo, rating
+BROKER#<BrokerId> | PROFILE | Broker | licenseNo, rating, region
 PROPERTY#<PropertyId> | VIEWSTAT#<Date> | DailyViewStat | viewCount
 SUBSCRIPTION#<UserId> | ACTIVE | Subscription | tier, expiresAt
 
-GSIs:  
-- GSI1: premiumFlag + createdAt (latest premium)  
+GSIs:
+- GSI1: premiumFlag + createdAt (latest premium listings)  
 - GSI2: locationHash + priceBand (geo + price filtering)  
 - GSI3: brokerId + status (broker dashboard)  
-- GSI4: createdAt (global recent listing feed)
+- GSI4: createdAt (recent listing feed)
 
 ---
 
 ## 6. Authentication & Authorization Flow
 1. Guest loads site via CloudFront.  
-2. Public listing queries allowed with Identity Pool guest role OR open GET endpoint with WAF throttling.  
-3. Registration/Login → Cognito User Pool (MFA enforced for privileged groups).  
-4. Tokens (ID, Access, Refresh) returned.  
-5. Client sends access token in Authorization header.  
-6. API Gateway JWT Authorizer validates signature & claims.  
-7. Lambda enforces resource-level authorization (ownership, premium subscription).  
-8. Premium media request: signed URL or signed cookie issued (short TTL).  
-9. Auditable events logged & emitted (EventBridge).  
+2. Guest queries public listing endpoints (guest IAM or open route with throttling + WAF).  
+3. User registers/logs in (Cognito User Pool).  
+4. Access/ID/Refresh tokens issued (JWT).  
+5. Client sends Authorization: Bearer <access_token>.  
+6. API Gateway JWT Authorizer validates token (signature, claims).  
+7. Lambda enforces domain-level rules (ownership, premium entitlements).  
+8. Premium media request obtains CloudFront Signed URL / Cookie (short TTL).  
+9. Events logged & correlated (traceId).  
 
 ---
 
-## 7. Security (Defense-in-Depth Summary)
+## 7. Security (Defense-in-Depth)
+
 Layer | Control
 ------|--------
-Edge | CloudFront + WAF managed rule groups, IP rate limiting
-Auth | Cognito JWT + MFA for high-risk roles
-App | Input validation, least-privilege Lambda roles
-Data | DynamoDB/Aurora/S3 encryption (KMS), optional field-level encryption
-Secrets | Secrets Manager rotation, Parameter Store for config
-Network | Private Lambda networking only if needed; restrict egress (future)
-Monitoring | GuardDuty, Security Hub, CloudTrail, Config, anomaly alerts
-Recovery | Versioning, PITR, snapshots, replication
-Governance | Tagging strategy, SCP guardrails, drift detection
+Edge | CloudFront + WAF (managed rule groups, rate-based rules)
+AuthN/AuthZ | Cognito (MFA for privileged groups), JWT claims, Lambda domain checks
+Application | Input validation, structured logging, least-priv privilege
+Data | DynamoDB / S3 / Aurora encryption (KMS), PITR
+Secrets | Secrets Manager (rotation), Parameter Store (non-secret)
+Monitoring | GuardDuty, Security Hub, Config, CloudTrail, anomaly detection
+Resilience | Versioning, PITR, replication, Step Functions retries
+Governance | Tag enforcement, SCPs, cost budgets, drift detection
 
 ---
 
 ## 8. Observability & Operations
-Practice | Detail
----------|-------
-Structured Logging | JSON; correlationId passed end-to-end
-Metrics | Latency percentiles, error ratios, cold starts, DynamoDB capacity usage
-Tracing | X-Ray segments & subsegments; Powertools instrumentation
-Synthetics | Core flows: login → search → premium media
-RUM | Performance metrics (LCP, TTFB, CLS)
-Cost Controls | Budgets, Anomaly Detection, monthly FinOps review
-Log Retention | 14–30 days hot; export to S3 + Glacier for long-term compliance
-Game Days | Quarterly: simulate data corruption, throttling, partial media loss
+
+Category | Practice
+---------|---------
+Logging | JSON format, correlationId inserted at edge
+Metrics | p50/p90/p95 latency, error %, throttles, cold start count
+Tracing | X-Ray segments for API/Lambda/DynamoDB
+Dashboards | CloudWatch unified SLO dashboards
+Alarms | Error budget consumption, latency threshold breach, cost anomaly
+Synthetics | Scripted login → search → premium media retrieval
+RUM | Core Web Vitals (LCP, TTFB, CLS) & session timings
+Cost Optimization | Budgets, anomaly detection, monthly FinOps review
+Resilience Testing | Quarterly DR drills + chaos (throttle injection, permission denial)
+Retention | Log retention 14–30 days hot, archived to S3/Glacier
 
 ---
 
-## 9. Disaster Recovery & Resilience
+## 9. Disaster Recovery & Resilience (Full Strategy)
 
 ### Objectives
-- Minimize downtime for Tier 0 (public/premium listing reads, auth, media).
-- RPO near-seconds for operational data (DynamoDB).
-- Phased investment (baseline -> intermediate -> selective active-active).
+- Keep Tier 0 services available.
+- RPO seconds for operational data.
+- Phased approach (baseline → intermediate → selective active‑active).
 
 ### Tier Classification
 Tier | Services
 -----|---------
-0 | Listing read, auth, media
+0 | Public/premium listing read, login, media
 1 | Listing create/update, favorites, broker dashboards
-2 | Advanced search (OpenSearch), analytics/reporting
-3 | AI valuation, recommendations, heavy batch
+2 | Advanced search, analytics/reporting
+3 | AI valuation, recommendations, batch enrichment
 
 ### Baseline RTO/RPO Matrix
-Component | RTO | RPO | Method
-----------|-----|-----|-------
-Static (S3+CF) | <5 min | Near-zero | Versioning + SRR + invalidation
-DynamoDB | Minutes | Seconds | PITR + on-demand backups + export to S3
-Aurora (opt) | 5–15 min | <5 min (with replica) | Cross-region replica or snapshot restore
-Media (S3) | <15 min | Near-zero | Versioning + SRR (+ optional CRR)
-API/Lambda | Seconds | N/A | Stateless redeploy (IaC)
-Cognito | Managed | Managed | AWS multi-AZ
-EventBridge/SQS/SNS | Seconds–Minutes | Near-zero | Multi-AZ durability
-OpenSearch (opt) | Hours | Snapshot interval | Snapshot restore / degrade fallback
 
-### Strategy Options
+Component | RTO | RPO | Strategy
+----------|-----|-----|---------
+Static (S3+CF) | <5 min | Near-zero | Versioning + SRR + invalidation
+DynamoDB | Minutes | Seconds | PITR + on-demand backups + weekly export
+Aurora (opt) | 5–15 min | <5 min (with replica) | Cross-region replica or snapshot
+Media (S3) | <15 min | Near-zero | Versioning + SRR (CRR optional)
+API/Lambda | Seconds | N/A | Stateless redeploy via IaC
+Cognito | Managed | Managed | Multi-AZ AWS service
+EventBridge/SQS/SNS | Seconds–Minutes | Near-zero | Durable multi-AZ
+OpenSearch (opt) | Hours | Snapshot interval | Snapshot restore or degrade mode
+
+### DR Strategy Options
+
 Option | Description | RTO Target | Complexity
 -------|-------------|-----------|-----------
-1 Baseline | Single-region + PITR + SRR; manual failover | Minutes–Hours | Low
-2 Intermediate | Add CRR + selected Global Tables + Aurora replica | <15 min | Medium
-3 Selective Active-Active | Multi-region active (core tables) | <5–10 min | High
+1 Baseline | Single region, PITR, SRR, manual redeploy | Minutes–Hours | Low
+2 Intermediate | Add CRR, selected Global Tables, Aurora replica | <15 min | Medium
+3 Selective Active-Active | Multi-region active for core tables | <5–10 min | High
 
-### Key Elements
-- DynamoDB: PITR (35 days) + weekly exports (Parquet) for analytics & DR assurance.
-- S3: Versioning + SRR; CRR only for high-value buckets (premium-media, raw-uploads).
-- Aurora: Deploy only if relational demand validated; cross-region replica for Option 2.
-- IaC: Full reproducibility; pre-bootstrapped DR region.
-- Validation: Monthly restore test; quarterly DR drill.
+### Key Mechanisms
+- DynamoDB: PITR 35 days + weekly Parquet export to S3.
+- S3: Versioning + SRR baseline; CRR premium decision based on business risk.
+- Aurora: Only deploy if relational complexity emerges; add replica for Option 2.
+- IaC: Complete reproducibility (CDK/Terraform).
+- Validation: Monthly restore test (automated), quarterly DR Game Day.
 
 ---
 
 ## 10. S3 Versioning, Replication & Lifecycle
 
-Bucket | Versioning | Replication | Lifecycle (Example) | Purpose
--------|------------|-------------|----------------------|--------
-raw-uploads | Enabled | SRR + optional CRR | Noncurrent → IA (30d) → GDA (90d) | Fast ingest & rollback
-public-media | Enabled | SRR | Keep 3 recent versions; older → GDA (180d) | Cost control & rollback
-premium-media | Enabled | SRR + optional CRR | Noncurrent → IA (30d) → GDA (120–180d) | High-value asset protection
+Bucket | Versioning | Replication | Lifecycle (Sample) | Purpose
+-------|------------|-------------|--------------------|--------
+raw-uploads | Enabled | SRR + optional CRR | Noncurrent → IA (30d) → GDA (90d) | Rapid rollback, ingest staging
+public-media | Enabled | SRR | Keep 3 recent versions; older → GDA (180d) | Cost-opt + rollback
+premium-media | Enabled | SRR + optional CRR | Noncurrent → IA (30d) → GDA (120–180d) | High-value content protection
 
-Controls: Block Public Access ON; OAC enforced; distinct CMKs; weekly S3 Inventory & replication metrics.
+Controls: Block Public Access ON; OAC enforced; separate KMS keys; weekly S3 Inventory; replication metrics.
 
 ---
 
 ## 11. Cost Model (Approximate Monthly USD)
 
-Scenario Assumptions:  
+Scenario:  
 Dev: 50K page views; 10K API calls/day; 200GB media  
 Launch: 500K page views; 150K API calls/day; 1TB media  
 Growth: 5M page views; 1M API calls/day; 6TB media; advanced search  
 
 Component | Dev | Launch | Growth (Aurora+Search)
 ----------|-----|--------|-----------------------
-S3 (incl. versioning) | ~$6 | ~$34 | ~$192
+S3 (w/versioning) | ~$6 | ~$34 | ~$192
 CloudFront | ~$10 | ~$91 | ~$880
 Lambda | ~$0.07 | ~$0.99 | ~$6.6
 API Gateway (HTTP) | ~$0.30 | ~$4.50 | ~$30
 DynamoDB | ~$1.4 | ~$7.8 | ~$49
 Aurora Serverless v2 (opt) | ~$43 | ~$86 | ~$215
-Cognito | $0 | $0 | ~$550 (beyond free 50K MAU)
+Cognito | $0 | $0 | ~$550
 WAF | ~$10 | ~$10–12 | ~$15–20
-Security (GuardDuty, etc.) | $15–25 | $60–80 | $150–250
-CloudWatch (logs/metrics) | ~$20 | ~$120 | ~$400
+Security (GuardDuty etc.) | $15–25 | $60–80 | $150–250
+CloudWatch | ~$20 | ~$120 | ~$400
 Location Service | ~$5 | ~$40 | ~$250
 Media Processing | ~$5 | ~$60 | ~$300
 OpenSearch (opt) | n/a | n/a | ~$120–150
-TOTAL (with Aurora+Search) | ~135–150 | ~430–480 | ~2,900–3,150
-Core Only (no Aurora/OpenSearch) | ~92–107 | ~344–394 | ~2,500
+TOTAL (with opt) | ~135–150 | ~430–480 | ~2,900–3,150
+Core Only | ~92–107 | ~344–394 | ~2,500
 
-Notes: Validate with current AWS calculator before budgeting decisions.
+(Validate pricing before financial commitments.)
 
 ---
 
@@ -278,16 +283,16 @@ Notes: Validate with current AWS calculator before budgeting decisions.
 
 Aspect | Traditional | Serverless (This Architecture)
 -------|-------------|--------------------------------
-Provisioning | Hardware lead time | Instant managed services
-Scaling | Manual & coarse | Automatic, fine-grained per request
-Ops Staffing | SysAdmins, DBAs | Minimal (focus on features)
-Capital & Idle Cost | High risk of over-provision | Pay-as-you-go
-Resilience | Multi-DC complexity | Built-in multi-AZ; easy DR layering
-Security Patching | Manual patch cycles | AWS managed base layers
-Innovation Velocity | Slower | Rapid via IaC & event-driven pattern
-Global Delivery | Additional engineering for CDN | Native CloudFront
-Lock-In Risk | Hardware sunk cost | Logical abstraction + open data formats
-Time to Market | Longer | Accelerated (weeks)
+Provisioning | Hardware procurement & delays | Immediate managed services
+Scaling | Manual, coarse increments | Automatic per request
+Ops Staffing | SysAdmins, DBAs, network engineers | Minimal cloud ops + dev
+Capital & Idle Cost | High idle overhead | Pay-as-you-go
+Resilience | Complex multi-DC design | Built-in multi-AZ + staged DR
+Security Patching | Manual cycles | AWS managed base layers
+Innovation Velocity | Slower (infra gating) | Fast (IaC + event-driven)
+Global Delivery | Additional CDN complexity | Native CloudFront edge
+Lock-In Risk | Hardware sunk | Logical abstraction + open formats
+Time to Market | Longer | Weeks
 
 ---
 
@@ -295,19 +300,19 @@ Time to Market | Longer | Accelerated (weeks)
 
 Priority | Recommendation
 ---------|---------------
-P1 | Approve serverless baseline (Option 1 DR).
-P1 | Enable S3 Versioning + SRR with lifecycle policies now.
-P1 | DynamoDB PITR + weekly export pipeline & integrity check.
-P1 | Cost guardrails: Budgets + Anomaly Detection + tag enforcement.
-P1 | Structured logging + X-Ray instrumentation from first deploy.
-P2 | EventBridge domain events for property lifecycle & media.
-P2 | Synthetic journeys (login, search, premium media) & error SLO alarms.
-P2 | Draft DR runbooks & schedule first DR drill (≤60 days).
-P3 | Defer Aurora/OpenSearch until complexity justifies.
-P3 | Geohash indexing & metrics before search expansion.
-P3 | Plan AI valuation after dataset maturity.
+P1 | Approve baseline architecture (Option 1 DR).
+P1 | Enable S3 Versioning + SRR + lifecycle now.
+P1 | DynamoDB PITR + weekly export/integrity job.
+P1 | Set Budgets + Anomaly Detection + tag enforcement.
+P1 | Implement structured logging & tracing from earliest deploy.
+P2 | Adopt EventBridge for core domain events.
+P2 | Add synthetic user journeys & SLO-based alarms.
+P2 | Draft DR runbooks; schedule first drill within 60 days.
+P3 | Defer Aurora/OpenSearch until complexity validates.
+P3 | Implement geohash filtering + metrics for search upgrade decision.
+P3 | Plan AI valuation only after sufficient data volume.
 P4 | Introduce caching (DAX) only if latency SLO risk emerges.
-P4 | Add feature flags (AppConfig) for safe experimentation.
+P4 | Add AppConfig feature flags for safe incremental rollout.
 
 ---
 
@@ -315,54 +320,238 @@ P4 | Add feature flags (AppConfig) for safe experimentation.
 
 Phase | Weeks | Deliverables
 ------|-------|-------------
-Foundation | 1–3 | IaC baseline (Cognito, API, DynamoDB, buckets, WAF, budgets)
-Media & Auth | 4–6 | Media pipeline (images), signed URL logic, Step Functions skeleton
-Security & DR | 7–8 | PITR verification, S3 SRR, lifecycle policies, backup export integrity job
-Performance & Cost | 9–10 | Dashboards, SLO alarms, log retention optimization
+Foundation | 1–3 | IaC baseline (Cognito, API, DynamoDB, S3, WAF, budgets)
+Media & Auth | 4–6 | Media pipeline (images), signed URL issuance, Step Functions scaffolding
+Security & DR | 7–8 | PITR test, SRR configured, lifecycle policies, backup integrity job
+Performance & Cost | 9–10 | Dashboards, error/latency alarms, cost optimization practices
 Enhancements | 11–12 | Favorites, premium entitlements, broker dashboards, EventBridge events
 Stabilize | 13 | DR Drill #1, index refinement
 Launch Prep | 14–15 | Load testing, WAF tuning, security review
-Go-Live | 16 | Production cutover & 48h hypercare
+Go-Live | 16 | Production cutover + 48h hypercare
 
 ---
 
-## 15. Extended Comprehensive Technical Q&A
-(Full integrated catalogue preserved. For brevity only section titles here—details retained from prior compilation.)
+## 15. Extended Comprehensive Technical Q&A Catalogue (Full)
 
-Sections:  
-13.1 Architecture & Design  
-13.2 Performance & Scalability  
-13.3 Security & Compliance  
-13.4 Authentication / Authorization  
-13.5 Data Modeling / Consistency  
-13.6 Geospatial & Search  
-13.7 Media & CDN  
-13.8 Observability & Reliability  
-13.9 DR / Backups  
-13.10 Cost & Optimization  
-13.11 Governance & Operations  
-13.12 CI/CD & Testing  
-13.13 Feature Roadmap / Extensibility  
-13.14 Compliance / Privacy  
-13.15 Multi-Tenancy / Access  
-13.16 Rate Limiting / Abuse  
-13.17 Migration / Legacy Data  
-13.18 Edge / Latency  
-13.19 Additional (rollback, large images, DR scope)  
+### 15.1 Architecture & Design
+Q1: Why serverless instead of containerized microservices initially?  
+A: Eliminates infrastructure management, scales per request, lowers idle cost, accelerates delivery; event-driven design still allows future microservice extraction.
 
-(Complete Q&A list available in v1.2; unchanged and fully adopted.)
+Q2: How do we avoid vendor lock-in?  
+A: Domain logic isolated; data exported in open formats (JSON/Parquet); IaC templates portable; minimal use of proprietary-only features early.
+
+Q3: Can we convert to microservices later?  
+A: Yes—EventBridge events and single-responsibility Lambdas allow gradual extraction to containers (ECS/EKS) without breaking consumers.
+
+Q4: Why not start with GraphQL?  
+A: REST via HTTP API is cheaper and simpler for MVP; GraphQL added later if client query flexibility/over-fetch issues appear.
+
+Q5: When to use Step Functions?  
+A: For multi-step, stateful workflows (media processing, moderation). Simple CRUD remains direct Lambda to avoid overhead.
+
+### 15.2 Performance & Scalability
+Q6: How do we handle sudden traffic spikes (launch campaign)?  
+A: CloudFront caching reduces origin load; Lambda concurrency auto-scales; DynamoDB on-demand automatically adjusts capacity.
+
+Q7: How to mitigate cold starts?  
+A: Use lightweight runtimes, bundle pruning (esbuild), minimal dependencies; apply Provisioned Concurrency only to latency-sensitive endpoints.
+
+Q8: When to add a caching layer (DAX/Redis)?  
+A: Only once metrics show p95 latency or throttling from repeated hot key access beyond acceptable SLO.
+
+Q9: How are performance SLOs enforced?  
+A: CloudWatch metrics + alarms; error budgets track SLO breaches; synthetic tests confirm user journey latencies.
+
+### 15.3 Security & Compliance
+Q10: How is premium media protected?  
+A: CloudFront Signed URLs/Cookies (short TTL) + OAC restricting S3; optional watermarking.
+
+Q11: How do we prevent bots scraping premium listings?  
+A: WAF bot rules, rate limiting, anomaly detection, dynamic signed tokens, optional watermark overlay.
+
+Q12: Where are secrets stored and rotated?  
+A: Secrets Manager (automatic rotation, especially for Aurora); Parameter Store for non-secret configuration.
+
+Q13: What encryption strategies are used?  
+A: All data encrypted at rest (KMS) and in transit (TLS 1.2/1.3); sensitive fields optionally envelope-encrypted client-side if required.
+
+Q14: How is MFA enforced for brokers/admins only?  
+A: Cognito groups + policies or Lambda triggers (PreTokenGeneration) requiring MFA for specific roles.
+
+Q15: How is least privilege maintained?  
+A: Dedicated IAM role per function; policy linters (cfn-nag, Access Analyzer); no wildcard actions except where unavoidable with explicit resource constraints.
+
+### 15.4 Authentication / Authorization
+Q16: Are social logins supported?  
+A: Yes, configure IdPs (Google, Apple, Facebook) in Cognito; map attributes to standard claims.
+
+Q17: Safe guest browsing approach?  
+A: Identity Pool un-auth role limited to read-only public listing endpoints; or open endpoint with WAF + throttling for simple GETs.
+
+Q18: How is property update authorization enforced?  
+A: BrokerId claim in JWT must match property record brokerId; Lambda conditional logic; failures return 403.
+
+### 15.5 Data Modeling / Consistency
+Q19: Are multi-item atomic updates supported?  
+A: DynamoDB TransactWriteItems for small batch atomic operations; Step Functions + compensation for larger workflows.
+
+Q20: How do we prevent stale overwrites?  
+A: Use version attribute with conditional write (expected version) to ensure optimistic concurrency.
+
+Q21: How are daily views tracked?  
+A: Partitioned by propertyId and date (VIEWSTAT#YYYY-MM-DD); aggregated later in analytics pipeline.
+
+### 15.6 Geospatial & Search
+Q22: Why not use Location Service for full advanced search?  
+A: Location Service is for geocoding/maps; not multi-attribute ranking or fuzzy search—OpenSearch or custom solution needed for complex queries.
+
+Q23: Early stage “within radius” approach?  
+A: Geohash + bounding box approximation with GSI queries + server-side refinement; later upgrade to OpenSearch geo_distance queries.
+
+Q24: When to adopt OpenSearch?  
+A: When search complexity (facets, fuzzy, scoring) increases operational cost or complexity in DynamoDB beyond maintainability.
+
+### 15.7 Media & CDN
+Q25: How to prevent hotlinking?  
+A: Signed URLs/Cookies + OAC + referrer checks (optional) + rotation of signing keys.
+
+Q26: Large video optimization?  
+A: MediaConvert for multi-bitrate streaming (HLS/DASH) + caching at CloudFront; store thumbnails for quick listing loads.
+
+Q27: Handling 360° tours?  
+A: Pipeline to preprocess & tile; store tile assets; adopt specialized SaaS only if advanced VR hotspots required.
+
+Q28: Image performance strategy?  
+A: Store multiple resolutions & formats (WebP/AVIF) via Lambda transformation; client selects optimal variant (responsive srcset).
+
+### 15.8 Observability & Reliability
+Q29: How are slow requests diagnosed?  
+A: X-Ray traces + structured logs filtering by latency > threshold + correlation IDs.
+
+Q30: Detect unusual delete events?  
+A: CloudTrail Data Events + EventBridge pattern triggers -> alert if threshold of deletions in interval exceeded.
+
+Q31: Initial SLO examples?  
+A: Listing Read p95 < 250ms (cached) / < 400ms (uncached); Error rate < 1%; Availability 99.9%.
+
+### 15.9 DR / Backups
+Q32: RPO for DynamoDB corruption?  
+A: Seconds via PITR to timestamp immediately before corruption.
+
+Q33: Backup integrity verification?  
+A: Monthly automated restore to temp table; compare item counts and hashed aggregates; report anomalies.
+
+Q34: Region outage response baseline?  
+A: Manual restore + redeploy (Option 1); improved failover (<15min) with Option 2 global replication.
+
+Q35: OpenSearch outage fallback?  
+A: Degrade to DynamoDB basic filtering until index restored.
+
+### 15.10 Cost & Optimization
+Q36: Primary early cost drivers?  
+A: CloudFront bandwidth, S3 storage growth, potential Aurora adoption, CloudWatch logs if unbounded.
+
+Q37: Prevent log cost bloat?  
+A: Strict retention, log level governance, metric filters for sampling heavy events, export & compress to S3.
+
+Q38: DynamoDB cost optimization trigger?  
+A: On-demand cost consistently > equivalent provisioned by ~30–40% for a steady period.
+
+Q39: Minimize CloudFront invalidations?  
+A: Hash-based asset versioning; only invalidate HTML or root manifest files.
+
+### 15.11 Governance & Operations
+Q40: Tag enforcement method?  
+A: SCP or pipeline hook rejecting untagged resources; AWS Config rule compliance audit.
+
+Q41: Environment secret segregation?  
+A: Distinct Secrets Manager entries per environment; cross-account isolation through multi-account structure.
+
+Q42: Key incident response roles?  
+A: Incident Commander, Recovery Engineer (Data), Recovery Engineer (API), Security Analyst, Communications Lead.
+
+### 15.12 CI/CD & Testing
+Q43: Ephemeral environments strategy?  
+A: PR triggers stack creation; after tests/merge, stack destroyed to reduce cost.
+
+Q44: Separation of unit & integration tests?  
+A: Unit tests run on build; integration tests against ephemeral stack with seeded sample data set.
+
+Q45: Cold start performance monitoring?  
+A: Log init duration metric; compare p50 vs p95; apply Provisioned Concurrency if consistent user-visible latency impact.
+
+### 15.13 Feature Roadmap / Extensibility
+Q46: Subscription tiers expansion path?  
+A: Claims (subscriptionLevel) + route gating + usage metrics for upsell prompts.
+
+Q47: AI-driven recommendations plan?  
+A: Collect engagement events via EventBridge → S3 analytics dataset → train (SageMaker/Bedrock) → real-time scoring Lambda.
+
+Q48: International expansion strategy?  
+A: Parameterized region endpoints; evaluate adding global tables & multi-region CloudFront failover; content localization pipeline.
+
+### 15.14 Compliance / Privacy
+Q49: Right-to-erasure implementation?  
+A: Step Functions workflow enumerating user-linked items; transactional deletes; anonymize aggregate stats.
+
+Q50: Immutable audit logs?  
+A: CloudTrail & security logs exported to S3 bucket with Object Lock (WORM) + dedicated retention policy.
+
+Q51: Data residency considerations?  
+A: Primary region (ap-south-1); document reasoning, encryption, and access controls; monitor regulation changes for Nepal localization requirements.
+
+### 15.15 Multi-Tenancy / Access
+Q52: Adding partner agencies?  
+A: Introduce tenantId partition scheme; per-tenant IAM policy boundaries & application-level filters.
+
+Q53: Prevent cross-tenant data exposure?  
+A: Strict composite keys (tenant prefix) + conditional checks + mandatory tenant claim in every request.
+
+### 15.16 Rate Limiting / Abuse
+Q54: API abuse defense?  
+A: API Gateway throttling, WAF rate-based rules, dynamic deny list, anomaly detection from metrics.
+
+Q55: Premium overuse mitigation?  
+A: Track per-user premium media access; enforce soft limits; prompt upgrade or apply temporary throttle.
+
+### 15.17 Migration / Legacy Data
+Q56: Import legacy data process?  
+A: Legacy dataset → S3 → transformation Lambda → DynamoDB batch writes (idempotent) → events for derived processing.
+
+Q57: Idempotency strategy for imports?  
+A: Natural unique legacy ID; conditional put (attribute_not_exists) + idempotency key logs.
+
+### 15.18 Edge / Latency
+Q58: Latency improvements beyond CDN?  
+A: CloudFront Functions for quick personalization; optimizing JS bundle (code splitting); compress images/JSON.
+
+Q59: Will multi-region materially improve Nepal latency?  
+A: Minimal vs Mumbai POP performance; multi-region pursued primarily for DR/uptime SLA, not raw latency at current geography.
+
+### 15.19 Additional / Misc
+Q60: Drift detection approach?  
+A: Regular CDK diff / Terraform plan audits + AWS Config drift detection & CI gating.
+
+Q61: Deployment rollback method?  
+A: Lambda versions + aliases; immutable asset versioning; retain last stable IaC template for quick revert.
+
+Q62: Large property image set handling?  
+A: Parallel signed uploads; asynchronous pipeline; concurrency throttling to manage cost & CPU.
+
+Q63: Scope of DR not overbuilt?  
+A: Option 1 baseline keeps complexity low; advanced options gated by RTO/RPO business justification.
 
 ---
 
-## 16. DR Runbook Summary (Condensed)
+## 16. DR Runbook Summary (Condensed Table)
 
 Scenario | Core Steps | Success Metric
 ---------|------------|---------------
-DynamoDB Corruption | Identify corruption time → PITR restore new table → re-point config → verify & reconcile | Data restored within RPO seconds
-Region Outage (Opt2+) | Trigger failover → promote DR resources / use Global Table → update DNS/origin → verify health | Tier 0 <15m RTO
-S3 Mass Deletion | Restore versions or replicate copy → cache invalidation if needed → confirm asset availability | 200 responses restored
-Credential Compromise | Revoke keys → rotate secrets/KMS if required → forensic snapshot → redeploy | Compromised access removed
-OpenSearch Failure | Switch to fallback DynamoDB filters → restore snapshot/test cluster | Core search continuity
+DynamoDB Corruption | Identify time → PITR restore new table → update config → verify integrity → reconcile events | Data restored within defined RPO (seconds)
+Region Outage (Opt2+) | Trigger failover → promote DR resources / use Global Table → DNS/origin update → health checks | Tier 0 restored <15m
+S3 Mass Deletion | Recover via versioning (remove delete markers) or replicate from SRR/CRR → refresh cache | Asset 200 responses restored
+Credential Compromise | Revoke credentials → rotate secrets/KMS if risk → forensic snapshot → redeploy secure stack | Compromise contained
+OpenSearch Failure | Switch to DynamoDB basic filter fallback → restore snapshot | Search continuity (degraded) maintained
 
 ---
 
@@ -371,104 +560,98 @@ OpenSearch Failure | Switch to fallback DynamoDB filters → restore snapshot/te
 # | Action | Owner | Target
 --|--------|-------|-------
 1 | Architecture sign-off | CTO/Investors | Week 1
-2 | Choose IaC framework (CDK vs Terraform) | Lead Dev | Week 1
-3 | Provision AWS accounts & SCP guardrails | Cloud Admin | Week 1
-4 | Create S3 buckets with Versioning/SRR & OAC | DevOps | Week 2
+2 | Choose IaC (CDK/Terraform) | Lead Dev | Week 1
+3 | Provision accounts + SCP guardrails | Cloud Admin | Week 1
+4 | Create S3 buckets (Versioning+SRR+OAC) | DevOps | Week 2
 5 | DynamoDB table + PITR + export pipeline | Backend | Week 2
-6 | Cognito User & Identity Pools | Backend | Week 3
-7 | Core CRUD APIs (properties/users) | Backend | Week 3
-8 | Media pipeline (image MVP) | Backend | Week 5
+6 | Cognito pools (User & Identity) | Backend | Week 3
+7 | Core CRUD APIs | Backend | Week 3
+8 | Media pipeline MVP (images) | Backend | Week 5
 9 | Logging & X-Ray instrumentation | DevOps | Week 5
-10 | WAF + budgets + anomaly detection | Security | Week 5
-11 | Draft DR runbooks + PITR test | DevOps | Week 6
+10 | WAF baseline + budgets/anomaly detection | Security | Week 5
+11 | DR runbooks + PITR restore test | DevOps | Week 6
 12 | Synthetic tests (login/search/media) | QA | Week 6
 13 | Schedule DR Drill #1 | PM | Week 6
-14 | Lifecycle policies final verification | DevOps | Week 7
+14 | Finalize lifecycle policies & validate | DevOps | Week 7
 15 | Launch readiness review | PM | Week 15
 
 ---
 
 ## 18. Optional Future Enhancements
-- OpenSearch (faceted search, fuzzy matching)
-- AppSync GraphQL for flexible client queries
-- AI valuation (SageMaker/Bedrock)
-- Recommendations (Bedrock/Personalize)
-- Edge personalization (CloudFront Functions)
-- Feature flags (AppConfig), A/B testing
-- Global Table / CRR (multi-region resilience)
-- Data lake analytics (Athena → Redshift)
-- Computer vision tagging for media
-- Real-time chat & viewer counters (AppSync/WebSockets)
+- OpenSearch (faceted & fuzzy search).
+- AppSync GraphQL API.
+- AI property valuation (SageMaker/Bedrock).
+- Personalized recommendations (Bedrock/Personalize).
+- Edge personalization (CloudFront Functions).
+- Feature flags & A/B (AppConfig).
+- Global Table / CRR for multi-region resilience.
+- Data lake & Redshift for advanced BI.
+- Computer vision tagging (image recognition).
+- Real-time chat / presence (AppSync/WebSockets).
 
 ---
 
-## 19. Why AWS vs Other Clouds
+## 19. Why AWS vs Other Clouds (Comparative Rationale)
 
-Dimension | AWS Advantage | Note vs Azure/GCP
-----------|---------------|------------------
-Regional Proximity | ap-south-1 near Nepal; broad CloudFront POP coverage | Comparable India regions exist, but AWS POP density strong.
-Serverless Maturity | Lambda, Step Functions, EventBridge deep integration | Azure Functions & GCP Cloud Run good; AWS event source breadth wider.
-Event Ecosystem | Native, consistent eventing across services | Azure EventGrid & GCP Eventarc improving; AWS early maturity edge.
-Identity Integration | Cognito + API Gateway JWT native flow | Azure AD B2C & Firebase are solid; AWS stack cohesive here.
-Operational Tooling | CDK/Terraform adoption, SAM, Powertools | Others have IaC; AWS ecosystem & community patterns prolific.
-Security & Governance | Organizations, Control Tower, Config, Security Hub standard | Azure Policy & GCP Org Policy strong; AWS multi-account patterns battle-tested.
-Marketplace & Partners | Large South Asia partner presence & integrations | Azure & GCP have marketplaces; breadth tilts to AWS.
-Cost Governance | Budgets, Anomaly Detection, granular cost allocation tags | Others have cost tools; AWS FinOps community breadth is high.
-Data & Analytics Path | DynamoDB → S3 → Athena/Glue/Redshift seamless | GCP BigQuery offers strong analytics, but AWS path flexible.
-Lock-In Mitigation | Open formats & event-driven modular architecture | Equivalent strategies feasible elsewhere; AWS breadth reduces need for proprietary leaps early.
+Dimension | AWS Advantage | Comparative Note (Azure/GCP)
+----------|---------------|------------------------------
+Regional Proximity | ap-south-1 (Mumbai) + dense CloudFront POP footprint | Similar India regions exist; AWS edge density strong for South Asia.
+Serverless Maturity | Lambda, Step Functions, EventBridge deep integrated triggers | Azure Functions, GCP Cloud Run solid but fewer native trigger varieties.
+Event Ecosystem | Broad event sources & partner events | Azure EventGrid & GCP Eventarc maturing.
+Identity & Access | Cognito + API Gateway JWT + granular IAM | Azure AD B2C / Firebase viable; AWS unifies IAM + serverless triggers.
+Security & Governance | Control Tower, Organizations, Config, Security Hub maturity | Azure Policy & GCP Org Policy strong; AWS multi-account patterns widely adopted.
+Cost Governance | Budgets, Anomaly Detection, Cost Explorer tools depth | Parity improving elsewhere; AWS strong FinOps community assets.
+Ecosystem Breadth | Vast marketplace & partner integrations | Others narrower for some prop-tech vertical tools.
+Analytics Path | DynamoDB → S3 → Athena/Glue → Redshift flexibility | GCP BigQuery strong; AWS flexible multi-tier approach appeals for staged growth.
+Lock-In Mitigation | Open formats + decoupled events minimize switching cost | Architectural discipline keeps risk low across clouds.
 
-Conclusion: AWS accelerates time-to-market with minimal ops overhead, broad native integrations, and a staged path to advanced capabilities while preserving exit optionality via open data formats & clean event boundaries.
+Conclusion: AWS accelerates secure MVP launch with comprehensive serverless, event, and governance tooling—supporting staged evolution without premature complexity.
 
 ---
 
 ## 20. Architecture Diagram (image.png) – Appraisal & Evolution
 
 ### Current Strengths
-- Clear 3-tier separation (Edge → API → Data).
-- Emphasis on serverless (Lambda, API Gateway).
-- Security boundary depiction (WAF, IAM).
-- Multi-AZ conceptual clarity.
-- Inclusion of processing pipelines & data stores.
+- Clear tier separation (Edge → API → Data).
+- Serverless-first emphasis reduces ops overhead.
+- Security layered (WAF, private origins).
+- Multi-AZ depiction clarifies resilience.
+- Inclusion of orchestration/process components.
 
 ### Improvement Opportunities
 Gap | Enhancement
-----|------------
-Event Backbone | Explicit EventBridge icon & labeled flows
-Media Lifecycle | Visual separation of raw vs processed buckets
-Lifecycle/Versioning | Annotate buckets with “Versioning + Lifecycle”
-Advanced Search | Dashed “OpenSearch (Phase 2)” placeholder
-Analytics Path | Arrow from DynamoDB to S3 (export) + Athena icon
-DR Enhancements | Dashed global replication note (Global Table / CRR)
-Auth Flow | JWT verification arrow (Cognito → API Gateway Authorizer)
-Feature Flags | AppConfig icon for progressive delivery
-FinOps | Cost Explorer/Budget icon for governance visibility
+----|-----------
+Event Backbone | Add explicit EventBridge icon & labeled event flows.
+Media Lifecycle | Distinguish raw vs processed media buckets & pipeline.
+Lifecycle/Versioning | Annotate S3 buckets with “Versioning + Lifecycle”.
+Advanced Search | Add dashed OpenSearch (Phase 2).
+Analytics Path | DynamoDB → S3 export arrow + Athena icon.
+DR Option | Dashed note for Global Table / CRR (Phase).
+Auth Flow | JWT validation arrow (Cognito → API Gateway Authorizer).
+Feature Flags | AppConfig icon.
+FinOps | Budgets/Cost Explorer icon.
+AI/ML | Placeholder for future valuation/recommendation service.
 
-### Evolution Timeline (Diagram Layers)
-Phase | Additions | Rationale
-------|-----------|----------
-1 (Now) | Core components only | MVP speed
-2 | EventBridge annotations & data export | Scalability & analytics readiness
-3 | OpenSearch (dashed) | Enhanced search UX once complexity validated
-4 | AI/ML inference endpoint | Valuation & recommendations differentiation
-5 | DR (Global Table/CRR) | Reduced downtime risk as SLA tightens
-6 | Feature flags & personalization at edge | Faster experimentation & conversion
-7 | FinOps & advanced observability icons | Mature governance & reliability metrics
-
-### Diagram Notation Guidelines
-- Solid border = implemented.
-- Dashed border = planned/future.
-- Color legend for categories: Security, Data, Compute, Workflow, Future.
-- Phase labels to prevent scope creep.
+### Evolution Timeline
+Phase | Diagram Additions | Outcome
+------|-------------------|--------
+1 | Core stack | MVP validated quickly
+2 | EventBridge & exports | Scalable feature delivery & analytics
+3 | OpenSearch placeholder | Enhanced search readiness
+4 | AI inference endpoint | Differentiated valuations/recommendations
+5 | Global Table / CRR | Higher resilience & reduced downtime
+6 | Feature flags & personalization | Faster experimentation
+7 | FinOps & extended observability | Governance maturity & SLA reporting
 
 ---
 
 ## 21. AWS Adoption Summary
-The architecture leverages AWS’s mature serverless ecosystem for rapid, secure launch while deliberately deferring higher-complexity, higher-cost components (search, AI, global replication) until KPIs justify them. The event-driven model plus open data export paths ensure strategic flexibility and controlled lock-in.
+Adoption strategy: maximize managed services for speed & reliability; defer advanced search & AI until justified by user metrics; preserve flexibility through open data exports and event decoupling; strengthen governance incrementally (DR Option 2 only upon traction milestones).
 
 ---
 
 ## 22. Concluding Statement
-This finalized design balances rapid market entry, premium user experience, robust security, and disciplined cost governance. It lays a modular foundation for phased evolution—advanced search, analytics, AI valuation, multi-region resilience—activated only when data-driven thresholds and business milestones warrant expanded investment.
+This final architecture delivers a resilient, secure, and cost-aware foundation tailored to a luxury real estate marketplace, emphasizing rapid iteration and future extensibility. Phased enhancements (search, AI, global resilience) unlock only when validated needs emerge—minimizing premature spend while protecting strategic optionality.
 
 ---
 
@@ -476,9 +659,10 @@ This finalized design balances rapid market entry, premium user experience, robu
 Version | Date | Summary
 -------|------|--------
 1.0 | Earlier | Initial consolidated architecture & DR
-1.1 | Earlier | Integrated full extended Q&A
+1.1 | Earlier | Integrated full extended Q&A (first pass)
 1.2 | Earlier | Added AWS vs other clouds + diagram appraisal
-1.3 | Final | Comprehensive final document (all components unified, TOC, minor editorial refinements)
+1.3 | Earlier | Unified doc; Q&A summarized
+1.4 | Current | Full Q&A explicitly included; final comprehensive version
 
 ---
 
