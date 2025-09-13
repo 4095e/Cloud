@@ -34,7 +34,7 @@ class App {
             
             // Initialize services
             await this.authService.init(this.configService.getConfig());
-            this.fileService.init(this.configService.getConfig());
+            this.fileService.init(this.configService.getConfig(), this.authService);
             this.uiService.init();
             
             // Setup event listeners

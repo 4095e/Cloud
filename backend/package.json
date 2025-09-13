@@ -1,0 +1,17 @@
+{
+  "name": "cloud-storage-backend",
+  "version": "1.0.0",
+  "description": "Backend Lambda functions for cloud storage application",
+  "scripts": {
+    "install-all": "cd src/auth && npm install && cd ../files && npm install && cd ../users && npm install",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "serverless",
+    "cloud-storage"
+  ],
+  "author": "",
+  "license": "MIT"
+}

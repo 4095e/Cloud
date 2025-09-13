@@ -101,6 +101,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "files" {
     id     = "optimize_storage"
     status = "Enabled"
 
+    filter {
+      prefix = ""
+    }
+
     # Transition to IA after 30 days
     transition {
       days          = 30
